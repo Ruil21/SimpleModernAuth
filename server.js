@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
+const os = require('os');
 
 const app = express();
 const PORT = 8080;
@@ -61,13 +62,32 @@ app.post('/login', (req, res) => {
 
     if (row) {
       console.log(`User ${username} logged in successfully.`);
-      res.redirect('http://13.38.31.1:8080/');
+      const serverIp = getServerIp();
+      res.redirect(`http://${serverIp}:${PORT}/`);
     } else {
-        res.redirect('/invalid-credentials.html');
+      res.redirect('/invalid-credentials.html');
     }
   });
 });
 
+function getServerIp() {
+  const networkInterfaces = os.networkInterfaces();
+  let serverIp = 'localhost'; // Default to localhost if IP cannot be determined
+
+  for (const interfaceKey in networkInterfaces) {
+    const interface = networkInterfaces[interfaceKey];
+    for (const details of interface) {
+      if (details.family === 'IPv4' && !details.internal) {
+        serverIp = details.address;
+        break;
+      }
+    }
+  }
+
+  return serverIp;
+}
+
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  const serverIp = getServerIp();
+  console.log(`Server is running on http://${serverIp}:${PORT}`);
 });
